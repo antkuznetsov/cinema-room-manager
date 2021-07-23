@@ -1,15 +1,34 @@
 package cinema;
 
+import java.util.Scanner;
+
 public class Cinema {
-    private final String [][] hall;
+    private final Scanner scanner = new Scanner(System.in);
+    private final int PRICE = 10;
+    private final int DISCOUNT_PRICE = 8;
+    private final int SIZE_OF_SMALL_HALL = 60;
+
+    private final int rows;
+    private final int seats;
+    private final int capacity;
+    private final String[][] hall;
+
+    private int rowsNeeded;
+    private int seatsNeeded;
 
     public static void main(String[] args) {
-        Cinema app = new Cinema(7, 8);
-        app.printHallPlan();
+        new Cinema(7, 8);
     }
 
     public Cinema(int rows, int seats) {
-        hall = new String[rows][seats];
+        this.rows = rows;
+        this.seats = seats;
+        this.capacity = rows * seats;
+        this.hall = new String[rows][seats];
+
+        //printHallPlan();
+        readData();
+        calculatePrice();
     }
 
     private void printHallPlan() {
@@ -26,5 +45,27 @@ public class Cinema {
             }
             System.out.println();
         }
+    }
+
+    private void readData() {
+        System.out.println("Enter the number of rows:");
+        rowsNeeded = Integer.parseInt(scanner.nextLine());
+        System.out.println("Enter the number of seats in each row:");
+        seatsNeeded = Integer.parseInt(scanner.nextLine());
+    }
+
+    private void calculatePrice() {
+        int placesNeeded = rowsNeeded * seatsNeeded;
+        int resultPrice;
+        if (placesNeeded <= SIZE_OF_SMALL_HALL) {
+            resultPrice = rowsNeeded * seatsNeeded * PRICE;
+        } else {
+            int middleRow = rowsNeeded / 2;
+            int priceOfFirstHalf = middleRow * seatsNeeded * PRICE;
+            int priceOfSecondHalf = (rowsNeeded - middleRow) * seatsNeeded * DISCOUNT_PRICE;
+            resultPrice = priceOfFirstHalf + priceOfSecondHalf;
+        }
+        System.out.println("Total income:");
+        System.out.printf("$%d%n", resultPrice);
     }
 }
