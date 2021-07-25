@@ -13,12 +13,14 @@ public class Cinema {
     private int capacity;
     private char[][] hall;
 
-    private int rowsNeeded;
-    private int seatsNeeded;
+    private int purchasedTickets = 0;
+    private int currentIncome = 0;
+    private int totalIncome;
 
     private enum Action {
         SHOW_SEATS("1"),
         BUY_TICKET("2"),
+        STATISTICS("3"),
         EXIT("0"),
         UNKNOWN("-1");
 
@@ -49,8 +51,6 @@ public class Cinema {
             Action action = Action.get(scanner.nextLine());
             performAction(action);
         }
-        //readData();
-        //calculatePrice();
     }
 
     private void initHall() {
@@ -67,11 +67,14 @@ public class Cinema {
                 hall[i][j] = 'S';
             }
         }
+
+        totalIncome = calculateTotalIncome();
     }
 
     private void showMenu() {
         System.out.println("1. Show the seats");
         System.out.println("2. Buy a ticket");
+        System.out.println("3. Statistics");
         System.out.println("0. Exit");
     }
 
@@ -81,7 +84,10 @@ public class Cinema {
                 printHallPlan();
                 break;
             case BUY_TICKET:
-                checkPriceAndBookSeat();
+                buyTicket();
+                break;
+            case STATISTICS:
+                printStatistics();
                 break;
             case EXIT:
                 exit();
@@ -107,52 +113,114 @@ public class Cinema {
         }
     }
 
-    private void readData() {
-        System.out.println("Enter the number of rows:");
-        rowsNeeded = Integer.parseInt(scanner.nextLine());
-        System.out.println("Enter the number of seats in each row:");
-        seatsNeeded = Integer.parseInt(scanner.nextLine());
-    }
-
-    private void calculatePrice() {
-        int placesNeeded = rowsNeeded * seatsNeeded;
-        int resultPrice;
-        if (placesNeeded <= SIZE_OF_SMALL_HALL) {
-            resultPrice = rowsNeeded * seatsNeeded * PRICE;
-        } else {
-            int middleRow = rowsNeeded / 2;
-            int priceOfFirstHalf = middleRow * seatsNeeded * PRICE;
-            int priceOfSecondHalf = (rowsNeeded - middleRow) * seatsNeeded * DISCOUNT_PRICE;
-            resultPrice = priceOfFirstHalf + priceOfSecondHalf;
-        }
-        System.out.println("Total income:");
-        System.out.printf("$%d%n", resultPrice);
-    }
-
-    private void checkPriceAndBookSeat() {
-        System.out.println("Enter a row number:");
-        int rowNumber = Integer.parseInt(scanner.nextLine());
-        System.out.println("Enter a seat number in that row:");
-        int seatNumber = Integer.parseInt(scanner.nextLine());
-
-        bookSeat(rowNumber, seatNumber);
-
-        int resultPrice;
+    private int calculateTotalIncome() {
+        int income;
         if (capacity <= SIZE_OF_SMALL_HALL) {
-            resultPrice = PRICE;
+            income = rows * seats * PRICE;
+        } else {
+            int middleRow = rows / 2;
+            int priceOfFirstHalf = middleRow * seats * PRICE;
+            int priceOfSecondHalf = (rows - middleRow) * seats * DISCOUNT_PRICE;
+            income = priceOfFirstHalf + priceOfSecondHalf;
+        }
+        return income;
+    }
+
+    private void buyTicket() {
+        int[] input = readData();
+
+        while (!isDataValid(input)) {
+            System.out.println("Wrong input!");
+            input = readData();
+        }
+
+        while (!isSeatFree(input)) {
+            System.out.println("That ticket has already been purchased!");
+            input = readData();
+        }
+
+        bookSeat(input);
+
+        int price = calculatePrice(input[0]);
+        currentIncome += price;
+
+        System.out.println("Ticket price: " + formatPrice(price));
+    }
+
+    private int[] readData() {
+        int[] input = new int[2];
+        System.out.println("Enter a row number:");
+        input[0] = Integer.parseInt(scanner.nextLine());
+        System.out.println("Enter a seat number in that row:");
+        input[1] = Integer.parseInt(scanner.nextLine());
+        return input;
+    }
+
+    private boolean isSeatFree(int[] input) {
+        int i = input[0] - 1;
+        int j = input[1] - 1;
+
+        return hall[i][j] == 'S';
+    }
+
+    private boolean isDataValid(int[] input) {
+        int i = input[0] - 1;
+        int j = input[1] - 1;
+
+        boolean isRowValid = i >= 0 && i < hall.length;
+        boolean isSeatValid = j >= 0 && j < hall[0].length;
+
+        return isRowValid && isSeatValid;
+    }
+
+    private void bookSeat(int[] input) {
+        int i = input[0] - 1;
+        int j = input[1] - 1;
+
+        hall[i][j] = 'B';
+        purchasedTickets++;
+    }
+
+    private int calculatePrice(int rowNumber) {
+        int price;
+        if (capacity <= SIZE_OF_SMALL_HALL) {
+            price = PRICE;
         } else {
             int middleRow = rows / 2;
             if (rowNumber <= middleRow) {
-                resultPrice = PRICE;
+                price = PRICE;
             } else {
-                resultPrice = DISCOUNT_PRICE;
+                price = DISCOUNT_PRICE;
             }
         }
-        System.out.printf("Ticket price: $%d%n", resultPrice);
+        return price;
     }
 
-    private void bookSeat(int row, int seat) {
-        hall[row - 1][seat - 1] = 'B';
+    private void printStatistics() {
+        System.out.println("Number of purchased tickets: " + getNumberOfPurchasedTickets());
+        System.out.printf("Percentage: %.2f%%%n", getPercentage());
+        System.out.println("Current income: " + formatPrice(getCurrentIncome()));
+        System.out.println("Total income: " + formatPrice(getTotalIncome()));
+    }
+
+    private int getNumberOfPurchasedTickets() {
+        return purchasedTickets;
+    }
+
+    private double getPercentage() {
+        return (double) purchasedTickets / capacity * 100.0;
+    }
+
+    private int getCurrentIncome() {
+        return currentIncome;
+    }
+
+    private int getTotalIncome() {
+        return totalIncome;
+    }
+
+    private String formatPrice(int price) {
+        return String.format("$%d", price);
     }
 
     private void exit() {
