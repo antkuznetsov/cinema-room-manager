@@ -16,16 +16,40 @@ public class Cinema {
     private int rowsNeeded;
     private int seatsNeeded;
 
-    public static void main(String[] args) {
-        new Cinema(7, 8);
+    private enum Action {
+        SHOW_SEATS("1"),
+        BUY_TICKET("2"),
+        EXIT("0"),
+        UNKNOWN("-1");
+
+        String value;
+
+        Action(String value) {
+            this.value = value;
+        }
+
+        public static Action get(String code) {
+            for (Action action: Action.values()) {
+                if (code.equals(action.value)) {
+                    return action;
+                }
+            }
+            return UNKNOWN;
+        }
     }
 
-    public Cinema(int rows, int seats) {
+    public static void main(String[] args) {
+        new Cinema();
+    }
+
+    public Cinema() {
         initHall();
-        printHallPlan();
+        while (true) {
+            showMenu();
+            Action action = Action.get(scanner.nextLine());
+            performAction(action);
+        }
         //readData();
-        checkPriceAndBookSeat();
-        printHallPlan();
         //calculatePrice();
     }
 
@@ -42,6 +66,28 @@ public class Cinema {
             for (int j = 0; j < hall[i].length; j++) {
                 hall[i][j] = 'S';
             }
+        }
+    }
+
+    private void showMenu() {
+        System.out.println("1. Show the seats");
+        System.out.println("2. Buy a ticket");
+        System.out.println("0. Exit");
+    }
+
+    private void performAction(Action action) {
+        switch (action) {
+            case SHOW_SEATS:
+                printHallPlan();
+                break;
+            case BUY_TICKET:
+                checkPriceAndBookSeat();
+                break;
+            case EXIT:
+                exit();
+                break;
+            default:
+                break;
         }
     }
 
@@ -107,5 +153,9 @@ public class Cinema {
 
     private void bookSeat(int row, int seat) {
         hall[row - 1][seat - 1] = 'B';
+    }
+
+    private void exit() {
+        System.exit(0);
     }
 }
